@@ -1,17 +1,17 @@
 package.path = package.path .. ";./src/?.lua"
 local luaunit = require("luaunit")
 
-local crypto = require("crypto")
-local coding = require("coding")
-local misc = require("misc")
-local heavy = require("heavy")
-local score = require("score")
-local log = require("log")
+local crypto = require("lib.crypto")
+local coding = require("lib.coding")
+local misc = require("lib.misc")
+local heavy = require("lib.heavy")
+local score = require("lib.score")
 local base64 = require("base64")
+local log = require("lib.log")
 log.level = "info"
 
 function TestSet1Challenge1()
-	print("Set 1 Challenge 1")
+  misc.heading(1,1)
 	local input_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
 	local expected = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
 	local result = coding.encodeBase64(coding.decodeHex(input_hex))
@@ -100,8 +100,7 @@ function TestSet1Challenge6()
 		end
 		table.insert(keys, key)
 	end
-	print("Key: " .. keys[3].. " -> " .. crypto.xorKey(input, keys[3]):sub(1,20))
-
+	print("Key: " .. keys[3] .. " -> " .. crypto.xorKey(input, keys[3]):sub(1, 20))
 end
 
 function TestSet1Challenge7()
@@ -109,8 +108,61 @@ function TestSet1Challenge7()
 	io.input("src/cyphers/challenge7.txt")
 	local raw = io.read("*all")
 	local input = base64.decode(raw)
-  local result = crypto.xorKey(input, "YELLOW SUBMARINE")
-  --print(result)
+	local openssl = require("openssl")
+	local evp = openssl.cipher.get("aes-128-ecb")
+	local key = "YELLOW SUBMARINE"
+
+	local e = evp:decrypt_new()
+	assert(e:init(key))
+	e:padding(false)
+
+	local decypher = assert(e:update(input))
+	decypher = decypher .. assert(e:final())
+	print(decypher:sub(1, 20))
 end
 
+function TestSet1Challenge8()
+	print("\nSet 1 Challenge 8")
+	io.input("src/cyphers/challenge8.txt")
+	local raw = io.read("*all"):gsub("\n","")
+
+
+	local input = coding.decodeHex(raw)
+
+	local bytes = heavy.blockDivide(input, 16)
+
+	local buckets = {}
+	for _, byte in ipairs(bytes) do
+		if buckets[byte] == nil then
+			buckets[byte] = 1
+		else
+			buckets[byte] = buckets[byte] + 1
+		end
+	end
+
+	local singel_entropy = {}
+	for byte, count in pairs(buckets) do
+		local p = count / #input
+		singel_entropy[byte] = -p * math.log(p, 256)
+	end
+
+	-- local block_entropy = {}
+	-- for i = 1, #input - 16, 16 do
+	-- 	local summed_entropy = 0
+	-- 	for j = 1, 16 do
+	-- 		summed_entropy = summed_entropy + singel_entropy[bytes[i + j]]
+	-- 	end
+	-- 	table.insert(block_entropy, summed_entropy / 16)
+	-- end
+
+	for i, byte in ipairs(bytes) do
+		-- print(buckets[byte])
+		if buckets[byte] > 1 then
+			io.write("X",i)
+		else
+			io.write("_")
+		end
+	end
+end
+k
 os.exit(luaunit.LuaUnit.run())

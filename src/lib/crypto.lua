@@ -1,6 +1,6 @@
 -- M.lua
-local log = require("log")
-local score = require("score")
+local log = require("lib.log")
+local score = require("lib.score")
 
 local M = {}
 

@@ -36,6 +36,18 @@ function M.dump(o)
 		return tostring(o)
 	end
 end
+function M.hexPrint(str)
+    for i = 1, #str do
+        local char = str:sub(i, i)
+        local ascii_code = string.byte(char)
+        if ascii_code >= 32 and ascii_code <= 126 then
+            io.write(char)
+        else
+            io.write(string.format("\\x%02X", ascii_code))
+        end
+    end
+    io.write("\n")
+end
 function M.asciiPrint(str)
     for i = 1, #str do
         local char = str:sub(i, i)
@@ -47,6 +59,13 @@ function M.asciiPrint(str)
         end
     end
     io.write("\n")
+end
+
+
+function M.heading(set, challenge)
+	print("Set " .. set .. " Challenge " .. challenge)
+
+  
 end
 
 return M

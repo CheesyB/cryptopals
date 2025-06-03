@@ -1,8 +1,8 @@
 -- score.lua
 local M = {}
 
-local log = require("log")
-local misc = require("misc")
+local log = require("lib.log")
+local misc = require("lib.misc")
 
 function M.ASC(a, b)
 	return a.score > b.score

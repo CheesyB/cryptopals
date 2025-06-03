@@ -1,7 +1,7 @@
 -- heavy
 local M = {}
 
-local score = require("score")
+local score = require("lib.score")
 
 function M.blockDivide(input, blockSize)
 	local block = {}
