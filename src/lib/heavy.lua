@@ -15,15 +15,12 @@ function M.detectKeysize(input, from, to)
 	local hemmingDist = {}
 	for i = from, to do
 		local blocks = M.blockDivide(input, i)
-		local total_score = (
-			score.hammingDistance(blocks[1], blocks[2])
-			+ score.hammingDistance(blocks[2], blocks[3])
-			+ score.hammingDistance(blocks[3], blocks[4])
-		)
-			/ i
-			/ 3
+		local total_score = 0
+		for j = 2, #blocks - 2 do
+			total_score = total_score + score.hammingDistance(blocks[j - 1], blocks[j]) / i
+		end
 
-		table.insert(hemmingDist, { size = i, score = total_score })
+		table.insert(hemmingDist, { size = i, score = total_score / (#blocks - 3) })
 	end
 	table.sort(hemmingDist, score.DSC)
 	return hemmingDist

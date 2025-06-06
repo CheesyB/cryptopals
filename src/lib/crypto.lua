@@ -1,6 +1,5 @@
 -- M.lua
-local log = require("lib.log")
-local score = require("lib.score")
+local log = require("lib.thirdparty.log")
 
 local M = {}
 
@@ -41,7 +40,7 @@ end
 
 function M.xorBuff(input, against)
 	if #input ~= #against then
-		error("buffer sizes must match")
+		error("buffer sizes must match, input: " .. #input .. " against: " .. #against)
 	end
 	local bytes = {}
 	for i = 1, #input do
@@ -52,8 +51,8 @@ function M.xorBuff(input, against)
 end
 
 function M.searchKey(input_bytes, score_fun, sort_fun)
-	local asciiChars = "0123456789" -- Digits (0 to 9)
-		.. " !\"#$%&'()*+,-./" -- Printable punctuation (SP to /)
+	local asciiChars = " !\"#$%&'()*+,-./" -- Printable punctuation (SP to /)
+		.. "0123456789" -- Digits (0 to 9)
 		.. ":;<=>?@"
 		.. "ABCDEFGHIJKLMNOPQRSTUVWXYZ" -- Uppercase letters (A to Z)
 		.. "abcdefghijklmnopqrstuvwxyz" -- Lowercase letters (a to z)

@@ -3,33 +3,28 @@ local M = {}
 local openssl = require("openssl")
 local crypto = require("lib.crypto")
 local misc = require("lib.misc")
+local ecb = require("lib.ecb")
 local heavy = require("lib.heavy")
 
-function M.cbc_decrypt(cipher, iv, key)
-	local evp = openssl.cipher.get("aes-128-ecb")
-
-	local e = evp:decrypt_new()
-	assert(e:init(key, iv))
-	e:padding(false)
+function M.decrypt(cipher, iv, key)
 
 	local blocks = heavy.blockDivide(cipher, #key)
 	local previouse_block = iv
 
 	local plaintext = ""
 	for _, block in ipairs(blocks) do
-		local plain = assert(e:update(block))
-		plain = plain .. assert(e:final())
+		plain = ecb.decrypt(block, key)
 		plaintext = plaintext .. crypto.xorBuff(plain, previouse_block)
 		previouse_block = block
 	end
 	return plaintext
 end
 
-function M.cbc_encrypt(plaintext, iv, key)
+function M.encrypt(plaintext, iv, key)
 	local evp = openssl.cipher.get("aes-128-ecb")
 
 	local e = evp:encrypt_new()
-	assert(e:init(key, iv))
+	assert(e:init(key))
 	e:padding(false)
 
 	local blocks = heavy.blockDivide(plaintext, #key)
@@ -39,8 +34,8 @@ function M.cbc_encrypt(plaintext, iv, key)
 
 	for _, block in ipairs(blocks) do
 		local xored = crypto.xorBuff(block, previouse_block)
-		local c = assert(e:update(xored))
-		cipher = cipher .. c .. assert(e:final())
+    local c = ecb.encrypt(xored, key)
+		cipher = cipher ..  c
 		previouse_block = c
 	end
 	return cipher

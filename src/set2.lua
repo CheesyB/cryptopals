@@ -6,10 +6,12 @@ local coding = require("lib.coding")
 local misc = require("lib.misc")
 local heavy = require("lib.heavy")
 local score = require("lib.score")
+local oracle = require("lib.oracle")
 local padding = require("lib.padding")
 local cbc = require("lib.cbc")
+local ecb = require("lib.ecb")
 local base64 = require("base64")
-local log = require("lib.log")
+local log = require("lib.thirdparty.log")
 log.level = "info"
 
 function TestSet2Challenge1()
@@ -18,6 +20,11 @@ function TestSet2Challenge1()
 	local block_length = 16
 	local padded = padding.pkcs7(input, block_length)
 	misc.hexPrint(padded)
+
+	block_length = 15
+	padded = padding.pkcs7(input, block_length)
+	print(#padded)
+	assert(#padded % block_length == 0)
 end
 
 function TestSet2Challenge2()
@@ -27,15 +34,31 @@ function TestSet2Challenge2()
 	local input = base64.decode(raw)
 	local key = "YELLOW SUBMARINE"
 	local IV = string.rep("\x00", #key)
-	local plain = cbc.cbc_decrypt(input, IV, key)
-  print(plain)
+	local plain = cbc.decrypt(input, IV, key)
+	print(plain:sub(1, 20))
 end
 
 function TestSet2Challenge3()
 	misc.heading(2, 3)
-	-- local cipher = cbc.cbc_encrypt("AAAAAAABBBBBBBCBCCIAJOIJO{IHOIHO", IV, key)
-	local plain = cbc.cbc_decrypt(input, IV, key)
-  print(plain)
+	for _ = 1, 100 do
+		local input = oracle.randb(50)
+		local cipher, mode = oracle.encryption_oracle(input)
+		assert(oracle.detect_mode(cipher), mode)
+	end
+end
+
+function TestSet2Challenge4()
+	misc.heading(2, 4)
+	io.input("src/cyphers/set2challenge4.txt")
+	local unkown = io.read("*all")
+	local key = "YELLOW SUBMARINE"
+	local new_oracle = oracle.append_oracle_ecb(unkown, key)
+	local cipher = new_oracle("")
+	local key_size = heavy.detectKeysize(cipher, 1, 40)[1]["size"]
+  log.info("Key size: ", misc.dump(key_size))
+
+	local plaintext = oracle.smack_ecb(new_oracle)
+  print(plaintext)
 end
 
 os.exit(luaunit.LuaUnit.run())

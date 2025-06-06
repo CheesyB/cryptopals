@@ -1,7 +1,8 @@
 -- score.lua
 local M = {}
 
-local log = require("lib.log")
+local log = require("lib.thirdparty.log")
+local json = require("lib.thirdparty.json")
 local misc = require("lib.misc")
 
 function M.ASC(a, b)
@@ -23,7 +24,7 @@ function M.scoreSimple(input_str)
 	return good / #input_str
 end
 
-local asciiFreq = {}
+local asciiFreq = json.decode(misc.read_file("src/assets/ascii_frequencies.json"))
 
 function M.scoreChiSquare(input_str)
 	local letters = {}
@@ -36,11 +37,13 @@ function M.scoreChiSquare(input_str)
 	end
 
 	local score = 0
-	for toTest, prob in pairs(asciiFreq()) do
-		local expected_count = prob / 100 * #input_str
-		local observed_count = letters[toTest] or 0
-		score = score + ((observed_count - expected_count) ^ 2 / expected_count)
-		log.debug(score, observed_count, expected_count)
+	for _, charprob in ipairs(asciiFreq) do
+		local expected_count = charprob["Freq"] * #input_str
+		local observed_count = letters[string.char(charprob["Char"])] or 0
+		if observed_count ~= 0 then
+			score = score + ((observed_count - expected_count) ^ 2 / expected_count)
+			log.debug(score, observed_count, expected_count)
+		end
 	end
 	return score
 end

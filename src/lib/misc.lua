@@ -1,6 +1,8 @@
 -- misc.lua
 local M = {}
 
+local log = require("lib.thirdparty.log")
+
 local oct2bin = {
 	["0"] = "000",
 	["1"] = "001",
@@ -62,8 +64,17 @@ function M.asciiPrint(str)
 end
 
 
+function M.read_file(path)
+    local file = io.open(path, "rb") -- r read mode and b binary mode
+    if not file then return nil end
+    local content = file:read "*a" -- *a or *all reads the whole file
+    file:close()
+    return content
+end
+
+
 function M.heading(set, challenge)
-	print("Set " .. set .. " Challenge " .. challenge)
+	log.warn("\nSet " .. set .. " Challenge " .. challenge)
 
   
 end

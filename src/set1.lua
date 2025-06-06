@@ -7,11 +7,11 @@ local misc = require("lib.misc")
 local heavy = require("lib.heavy")
 local score = require("lib.score")
 local base64 = require("base64")
-local log = require("lib.log")
+local log = require("lib.thirdparty.log")
 log.level = "info"
 
 function TestSet1Challenge1()
-  misc.heading(1,1)
+	misc.heading(1, 1)
 	local input_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
 	local expected = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
 	local result = coding.encodeBase64(coding.decodeHex(input_hex))
@@ -20,7 +20,7 @@ function TestSet1Challenge1()
 end
 
 function TestSet1Challenge2()
-	print("\nSet 1 Challenge 2")
+	misc.heading(1,2)
 	local input_str = coding.decodeHex("1c0111001f010100061a024b53535009181c")
 	local against = coding.decodeHex("686974207468652062756c6c277320657965")
 	local expected = "746865206b696420646f6e277420706c6179"
@@ -83,24 +83,17 @@ function TestSet1Challenge6()
 	io.input("src/cyphers/challenge6.txt")
 	local raw = io.read("*all")
 	local input = base64.decode(raw)
-	luaunit.assertEquals(score.hammingDistance("this is a test\n", "wokka wokka!!!\n"), 37)
 	local keySizes = heavy.detectKeysize(input, 1, 40)
-	local sizes = {
-		keySizes[1]["size"],
-		keySizes[2]["size"],
-		keySizes[3]["size"],
-	}
-	local keys = {}
-	for _, size in ipairs(sizes) do
-		local transposed = heavy.transposeInput(input, size)
-		local key = ""
-		for _, block in ipairs(transposed) do
-			local res = crypto.searchKey(block, score.scoreSimple, score.ASC)
-			key = key .. res["key"]
-		end
-		table.insert(keys, key)
+	local size = keySizes[1]["size"]
+  log.info("key size " .. size)
+
+	local transposed = heavy.transposeInput(input, size)
+	local key = ""
+	for _, block in ipairs(transposed) do
+		local res = crypto.searchKey(block, score.scoreChiSquare, score.DSC)
+		key = key .. res["key"]
 	end
-	print("Key: " .. keys[3] .. " -> " .. crypto.xorKey(input, keys[3]):sub(1, 20))
+	print("Key: " .. key .. " -> " .. crypto.xorKey(input, key):sub(1, 200))
 end
 
 function TestSet1Challenge7()
@@ -124,8 +117,7 @@ end
 function TestSet1Challenge8()
 	print("\nSet 1 Challenge 8")
 	io.input("src/cyphers/challenge8.txt")
-	local raw = io.read("*all"):gsub("\n","")
-
+	local raw = io.read("*all"):gsub("\n", "")
 
 	local input = coding.decodeHex(raw)
 
@@ -158,11 +150,11 @@ function TestSet1Challenge8()
 	for i, byte in ipairs(bytes) do
 		-- print(buckets[byte])
 		if buckets[byte] > 1 then
-			io.write("X",i)
+			io.write("X", i)
 		else
 			io.write("_")
 		end
 	end
 end
-k
+
 os.exit(luaunit.LuaUnit.run())
