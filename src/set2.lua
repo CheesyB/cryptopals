@@ -2,6 +2,8 @@ package.path = package.path .. ";./src/?.lua"
 local luaunit = require("luaunit")
 
 local crypto = require("lib.crypto")
+local json = require("lib.thirdparty.json")
+local parsing = require("lib.parsing")
 local coding = require("lib.coding")
 local misc = require("lib.misc")
 local heavy = require("lib.heavy")
@@ -55,10 +57,22 @@ function TestSet2Challenge4()
 	local new_oracle = oracle.append_oracle_ecb(unkown, key)
 	local cipher = new_oracle("")
 	local key_size = heavy.detectKeysize(cipher, 1, 40)[1]["size"]
-  log.info("Key size: ", misc.dump(key_size))
+	log.info("Key size: ", misc.dump(key_size))
 
-	local plaintext = oracle.smack_ecb(new_oracle)
-  print(plaintext)
+	-- local plaintext = oracle.smack_ecb(new_oracle)
+	print(plaintext)
+end
+
+function TestSet2Challenge5()
+	misc.heading(2, 5)
+  local attack_block = "admin" .. string.rep(string.char(11), 11)
+  local attack_email = string.rep('A', 10) .. attack_block .. string.rep('A', 18)
+	local current_cipher = parsing.profile_for(attack_email)
+  local blocks = heavy.blockDivide(current_cipher, 16)
+  blocks[5] = blocks[2]
+  local tmp = table.concat(blocks)
+  local pwnd = parsing.parse_profile(tmp)
+  print(json.encode(pwnd))
 end
 
 os.exit(luaunit.LuaUnit.run())

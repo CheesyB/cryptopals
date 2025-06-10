@@ -103,7 +103,7 @@ function M.smack_ecb(oracle)
 
 	local plaintext = string.rep("A", block_size - 1)
 
-	for i = 1, #plain_oracle -1 do
+	for i = 1, #plain_oracle - 1 do
 		for j = 1, block_size do
 			local padding = string.rep("A", block_size - j)
 			local cipher_bytes = heavy.blockDivide(oracle(padding), 16)[(i // block_size) + 1]
@@ -117,14 +117,14 @@ function M.smack_ecb(oracle)
 				end
 			end
 		end
-    if i % 10 == 0 then
-      io.write('.')
-      io.flush()
-    end
+		if i % 10 == 0 then
+			io.write(".")
+			io.flush()
+		end
 	end
-  print()
+	print()
 
-	return plaintext:sub(16,#plaintext)
+	return plaintext:sub(16, #plaintext)
 end
 
 return M

@@ -6,14 +6,14 @@ local misc = require("lib.misc")
 local ecb = require("lib.ecb")
 local heavy = require("lib.heavy")
 
-function M.decrypt(cipher, iv, key)
-
+function M.decrypt(cipher, iv, key, padding)
+  padding = padding or false
 	local blocks = heavy.blockDivide(cipher, #key)
 	local previouse_block = iv
 
 	local plaintext = ""
 	for _, block in ipairs(blocks) do
-		plain = ecb.decrypt(block, key)
+		plain = ecb.decrypt(block, key, padding)
 		plaintext = plaintext .. crypto.xorBuff(plain, previouse_block)
 		previouse_block = block
 	end
