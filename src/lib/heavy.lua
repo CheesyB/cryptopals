@@ -4,6 +4,9 @@ local M = {}
 local score = require("lib.score")
 
 function M.blockDivide(input, blockSize)
+  if blockSize == nil then
+    blockSize = 16
+  end
 	local block = {}
 	for i = 1, #input, blockSize do
 		table.insert(block, string.sub(input, i, i + blockSize - 1))

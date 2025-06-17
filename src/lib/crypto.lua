@@ -30,7 +30,11 @@ function M.xorKey(input, key)
 end
 
 function M.xorByte(input, against)
+  if type(input) == string then
+    input = string.byte(input, i, i)
+  end
 	local bytes = {}
+
 	for i = 1, #input do
 		local byte = string.byte(input, i, i) ~ string.byte(against)
 		table.insert(bytes, byte)

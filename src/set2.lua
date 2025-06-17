@@ -1,17 +1,13 @@
 package.path = package.path .. ";./src/?.lua"
 local luaunit = require("luaunit")
 
-local crypto = require("lib.crypto")
 local json = require("lib.thirdparty.json")
 local parsing = require("lib.parsing")
-local coding = require("lib.coding")
 local misc = require("lib.misc")
 local heavy = require("lib.heavy")
-local score = require("lib.score")
-local oracle = require("lib.oracle")
+local oracle = require("lib.ecb_oracle")
 local padding = require("lib.padding")
 local cbc = require("lib.cbc")
-local ecb = require("lib.ecb")
 local base64 = require("base64")
 local log = require("lib.thirdparty.log")
 log.level = "info"
@@ -59,8 +55,7 @@ function TestSet2Challenge4()
 	local key_size = heavy.detectKeysize(cipher, 1, 40)[1]["size"]
 	log.info("Key size: ", misc.dump(key_size))
 
-	-- local plaintext = oracle.smack_ecb(new_oracle)
-	print(plaintext)
+	-- oracle.smack_ecb(new_oracle)
 end
 
 function TestSet2Challenge5()
@@ -73,6 +68,18 @@ function TestSet2Challenge5()
   local tmp = table.concat(blocks)
   local pwnd = parsing.parse_profile(tmp)
   print(json.encode(pwnd))
+end
+
+function TestSet2Challenge6()
+	misc.heading(2, 6)
+	io.input("src/cyphers/set2challenge4.txt")
+	local unkown = io.read("*all")
+	local key = "YELLOW SUBMARINE"
+	local new_oracle = oracle.append_oracle_ecb(unkown, key, "randomBytes")
+	local cipher = new_oracle("")
+	local key_size = heavy.detectKeysize(cipher, 1, 40)[1]["size"]
+  local test = oracle.smack_ecb_harder(new_oracle)
+  
 end
 
 os.exit(luaunit.LuaUnit.run())

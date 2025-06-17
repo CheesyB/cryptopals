@@ -13,7 +13,7 @@ function M.decrypt(cipher, iv, key, padding)
 
 	local plaintext = ""
 	for _, block in ipairs(blocks) do
-		plain = ecb.decrypt(block, key, padding)
+		local plain = ecb.decrypt(block, key, padding)
 		plaintext = plaintext .. crypto.xorBuff(plain, previouse_block)
 		previouse_block = block
 	end

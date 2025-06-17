@@ -20,9 +20,12 @@ local function rand16b()
 	return M.randb(16)
 end
 
-function M.append_oracle_ecb(unknown_string, key)
+function M.append_oracle_ecb(unknown_string, key, radom_prefix)
+	if radom_prefix == nil then
+		radom_prefix = ""
+	end
 	return function(my_string)
-		local combined = my_string .. coding.decodeBase64(unknown_string:gsub("\n", ""))
+		local combined = radom_prefix .. my_string .. coding.decodeBase64(unknown_string:gsub("\n", ""))
 		local input = padding.pkcs7(combined, 16)
 		return ecb.encrypt(input, key)
 	end
@@ -113,18 +116,56 @@ function M.smack_ecb(oracle)
 				assert(#test_cipher == #cipher_bytes)
 				if test_cipher == cipher_bytes then
 					plaintext = plaintext .. c
+					io.write(c)
+					io.flush()
 					break
 				end
 			end
-		end
-		if i % 10 == 0 then
-			io.write(".")
-			io.flush()
 		end
 	end
 	print()
 
 	return plaintext:sub(16, #plaintext)
+end
+
+function M.smack_ecb_harder(oracle)
+	local block_size = 16
+	local prefix_len = 0
+	for i = 32, 65 do
+		local repeated = string.rep("A", i)
+		local cipher_blocks = heavy.blockDivide(oracle(repeated))
+		if cipher_blocks[2] == cipher_blocks[3] then
+			prefix_len = i % 16
+			print("Prefix Length: " .. prefix_len)
+			break
+		end
+	end
+	-- let's make sure that we have a block_size * 3 byte duplicate code block
+	assert(M.detect_mode(oracle(string.rep("A", block_size * 3))) == "ecb")
+
+	local plaintext = string.rep("A", (16 - prefix_len) + block_size - 1)
+	local plain_oracle = oracle("")
+
+	for i = 1, #plain_oracle - 1 do
+		for j = 1, block_size do
+			local padding = string.rep("A", (16 - prefix_len) + block_size - j)
+			local cipher_bytes = heavy.blockDivide(oracle(padding), 16)
+			local cipher_bytes = cipher_bytes[(i // block_size) + 2]
+			for c in asciiChars:gmatch(".") do
+				local p = plaintext:sub(-20) .. c
+				local test_cipher = oracle(p):sub(17, block_size * 2)
+				assert(#test_cipher == #cipher_bytes)
+				if test_cipher == cipher_bytes then
+					plaintext = plaintext .. c
+					io.write(c)
+					io.flush()
+					break
+				end
+			end
+		end
+	end
+	print()
+	return plaintext:sub(16 - prefix_len + 16, #plaintext)
 end
 
 return M
